@@ -178,25 +178,9 @@ backend/
 
 The API uses token-based authentication. After registering or logging in, you receive a token that must be included in all subsequent requests:
 
-```bash
-curl -H "Authorization: Token YOUR_TOKEN_HERE" http://127.0.0.1:8000/api/profile/1/
-```
-
-## Development Notes
-
-- The project uses SQLite for local development
-- Token-based authentication is used for API access
-- Business users can create and manage offers
-- Customers can create orders and reviews
-- Admin users can delete orders
-
 ## Technologies Used
 
 - **Django 5.2.12** - Web framework
 - **Django REST Framework** - REST API framework
 - **Django Filter** - Filtering for querysets
 - **SQLite** - Database (local development)
-
-## License
-
-This project is proprietary and confidential.
