@@ -1,0 +1,12 @@
+# Dev environment
+pip==26.0.1
+autopep8
+
+# App
+asgiref==3.11.1
+Django==5.2.12
+sqlparse==0.4.4
+typing_extensions==4.9.0
+djangorestframework
+djangorestframework-simplejwt
+django-filter
