@@ -8,8 +8,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 dotenv_path = BASE_DIR.parent / ".env"
 load_dotenv(dotenv_path=dotenv_path)
 
-print(load_dotenv)
-
 SECRET_KEY = os.getenv("SECRET_KEY", "a-default-secret-key")
 
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
