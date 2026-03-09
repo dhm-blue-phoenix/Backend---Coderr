@@ -47,15 +47,23 @@ python --version
    pip install -r requirements.txt
    ```
 
-4. Apply migrations and create the database (SQLite is used for local development):
+4. Create a `.env` file in the root directory of the project:
+
+   ```
+   SECRET_KEY=your-secret-key-here
+   DEBUG=True
+   ```
+
+   > **Note:** Never commit your `.env` file to version control. It is listed in `.gitignore` by default.
+
+5. Apply migrations and create the database (SQLite is used for local development):
 
    ```bash
    cd backend
-   python manage.py makemigrations
    python manage.py migrate
    ```
 
-5. Create a superuser for admin access (optional):
+6. Create a superuser for admin access (optional):
 
    This allows you to access the Django admin interface at `/admin/`.
 
@@ -63,7 +71,7 @@ python --version
    python manage.py createsuperuser
    ```
 
-6. Run the development server:
+7. Run the development server:
 
    ```bash
    python manage.py runserver
@@ -183,4 +191,5 @@ The API uses token-based authentication. After registering or logging in, you re
 - **Django 5.2.12** - Web framework
 - **Django REST Framework** - REST API framework
 - **Django Filter** - Filtering for querysets
+- **python-dotenv** - Environment variable management
 - **SQLite** - Database (local development)

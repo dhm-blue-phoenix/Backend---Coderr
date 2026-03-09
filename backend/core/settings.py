@@ -1,11 +1,18 @@
 from pathlib import Path
+import os
+from dotenv import load_dotenv
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+dotenv_path = BASE_DIR.parent / ".env"
+load_dotenv(dotenv_path=dotenv_path)
 
-SECRET_KEY = "django-insecure-m(wpj0*7k!&hkv*sc*y&@j=r&vf*j0i19^f#z@b-a*x#2(9^6#"
+print(load_dotenv)
 
-DEBUG = False
+SECRET_KEY = os.getenv("SECRET_KEY", "a-default-secret-key")
+
+DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
 
 ALLOWED_HOSTS = ["127.0.0.1"]
 
