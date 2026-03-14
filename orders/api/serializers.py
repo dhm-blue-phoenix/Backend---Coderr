@@ -40,6 +40,8 @@ class OrderSerializer(serializers.ModelSerializer):
             self.context['offer_detail'] = offer_detail
         except OfferDetail.DoesNotExist:
             raise serializers.ValidationError("Ein Angebot mit dieser ID existiert nicht.")
+        except (TypeError, ValueError):
+            raise serializers.ValidationError("Ungültige Angebotsdetail-ID.")
         return value
 
     def create(self, validated_data):

@@ -40,7 +40,13 @@ class OrderViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         try:
+            offer_detail_id = int(offer_detail_id)
             OfferDetail.objects.get(id=offer_detail_id)
+        except (ValueError, TypeError):
+            return response.Response(
+                {"error": "Ungültige Angebotsdetail-ID."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         except OfferDetail.DoesNotExist:
             return response.Response(
                 {"error": "Ein Angebot mit dieser ID existiert nicht."},
@@ -93,6 +99,7 @@ class CompletedOrderCountView(views.APIView):
         try:
             business_user = User.objects.get(id=business_user_id, type='business')
         except User.DoesNotExist:
-            return response.Response({"error": "Business-Benutzer nicht gefunden."}, status=status.HTTP_404_NOT_FOUND)
+            return response.Response({"error": "Business-Benutzer nicht gefunden."},
+                status=status.HTTP_404_NOT_FOUND)
         count = Order.objects.filter(business_user=business_user, status='completed').count()
         return response.Response({'completed_order_count': count})

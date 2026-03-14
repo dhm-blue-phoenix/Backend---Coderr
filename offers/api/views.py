@@ -3,7 +3,7 @@ from rest_framework.generics import RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
 from ..models import Offer, OfferDetail
-from .serializers import OfferSerializer, OfferListSerializer, OfferDetailSerializer
+from .serializers import OfferSerializer, OfferListSerializer, OfferDetailListSerializer
 from .permissions import IsOwnerOrReadOnly, IsBusinessUser
 from core.paginators import StandardResultsSetPagination
 from .filters import OfferFilter
@@ -45,5 +45,5 @@ class OfferViewSet(viewsets.ModelViewSet):
 
 class OfferDetailViewSet(RetrieveAPIView):
     queryset = OfferDetail.objects.all()
-    serializer_class = OfferDetailSerializer
+    serializer_class = OfferDetailListSerializer
     permission_classes = [IsAuthenticated]

@@ -4,6 +4,7 @@ from authentication.api.serializers import UserDetailsSerializer
 
 
 class OfferDetailSerializer(serializers.ModelSerializer):
+    price = serializers.FloatField()
 
     class Meta:
         model = OfferDetail
@@ -17,15 +18,27 @@ class OfferDetailSerializer(serializers.ModelSerializer):
             "offer_type",
         ]
 
+class OfferDetailListSerializer(serializers.ModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name='offerdetail-detail', 
+        lookup_field='pk'
+    )
+    price = serializers.FloatField()
+
+    class Meta:
+        model = OfferDetail
+        fields = ["id", "title", "revisions", "delivery_time_in_days", "price", "features", "offer_type", "url"]
+
 
 class OfferDetailInputSerializer(serializers.ModelSerializer):
+    price = serializers.FloatField()
     class Meta:
         model = OfferDetail
         fields = ["title", "revisions", "delivery_time_in_days", "price", "features", "offer_type"]
 
 
 class OfferSerializer(serializers.ModelSerializer):
-    details = OfferDetailInputSerializer(many=True, write_only=True)
+    details = OfferDetailInputSerializer(many=True)
     user = serializers.ReadOnlyField(source='creator.id')
     user_details = UserDetailsSerializer(source="creator", read_only=True)
     min_price = serializers.ReadOnlyField()
@@ -51,11 +64,17 @@ class OfferSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         ret = super().to_representation(instance)
         details = []
+        request = self.context.get('request')
+        
+        # Use serializer with URL for 'retrieve' action, and without for others.
+        if self.context.get('view') is not None and self.context['view'].action == 'retrieve':
+            DetailSerializer = OfferDetailListSerializer
+        else:
+            DetailSerializer = OfferDetailSerializer
+
         for detail in instance.details.all():
-            details.append({
-                "id": detail.id,
-                "url": f"/api/offerdetails/{detail.id}/"
-            })
+            details.append(DetailSerializer(detail, context={'request': request}).data)
+        
         ret['details'] = details
         return ret
 
@@ -79,6 +98,8 @@ class OfferSerializer(serializers.ModelSerializer):
             existing_details = {d.offer_type: d for d in instance.details.all()}
             for detail_data in details_data:
                 offer_type = detail_data.get("offer_type")
+                if not offer_type:
+                    raise serializers.ValidationError("Missing offer_type")
                 detail = existing_details.get(offer_type)
                 if detail:
                     for attr, value in detail_data.items():
@@ -94,7 +115,7 @@ class OfferListSerializer(serializers.ModelSerializer):
     min_delivery_time = serializers.SerializerMethodField()
     user = serializers.ReadOnlyField(source='creator.id')
     user_details = UserDetailsSerializer(source="creator", read_only=True)
-    details = serializers.SerializerMethodField()
+    details = OfferDetailListSerializer(many=True, read_only=True)
 
     class Meta:
         model = Offer
@@ -117,13 +138,3 @@ class OfferListSerializer(serializers.ModelSerializer):
 
     def get_min_delivery_time(self, obj):
         return obj.min_delivery_time
-    
-    def get_details(self, obj):
-        from rest_framework.reverse import reverse
-        details_list = []
-        for detail in obj.details.all():
-            details_list.append({
-                "id": detail.id,
-                "url": f"/api/offerdetails/{detail.id}/"
-            })
-        return details_list
