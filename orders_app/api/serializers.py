@@ -8,6 +8,11 @@ from ..models import Order
 
 
 class OrderSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the Order model.
+
+    Handles the creation of orders and validation of the offer detail.
+    """
     offer_detail_id = serializers.IntegerField(write_only=True, required=True)
     customer_user = serializers.PrimaryKeyRelatedField(
         source="customer", read_only=True
@@ -64,10 +69,10 @@ class OrderSerializer(serializers.ModelSerializer):
             self.context["offer_detail"] = offer_detail
         except OfferDetail.DoesNotExist:
             raise serializers.ValidationError(
-                "Ein Angebot mit dieser ID existiert nicht."
+                "An offer with this ID does not exist."
             )
         except (TypeError, ValueError):
-            raise serializers.ValidationError("Ungültige Angebotsdetail-ID.")
+            raise serializers.ValidationError("Invalid offer detail ID.")
         return value
 
     def create(self, validated_data):
@@ -75,7 +80,7 @@ class OrderSerializer(serializers.ModelSerializer):
         customer = self.context["request"].user
         if customer.type == "business":
             raise serializers.ValidationError(
-                "Business-Benutzer können keine Bestellungen aufgeben."
+                "Business users cannot place orders."
             )
         business_user = offer_detail.offer.creator
         validated_data.pop("offer_detail_id")

@@ -5,6 +5,10 @@ from django.db import models
 
 
 class Review(models.Model):
+    """
+    A model for a review of a business user by a customer user.
+    """
+
     reviewer = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="reviews_given"
     )

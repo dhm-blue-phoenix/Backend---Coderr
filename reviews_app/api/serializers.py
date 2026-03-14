@@ -1,11 +1,17 @@
+# Third-party
 from django.core.validators import MaxValueValidator, MinValueValidator
 from rest_framework import serializers
 
+# Local
 from auth_app.models import User
 from reviews_app.models import Review
 
 
 class ReviewSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the Review model.
+    """
+
     reviewer = serializers.PrimaryKeyRelatedField(read_only=True)
     business_user = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.filter(type="business")

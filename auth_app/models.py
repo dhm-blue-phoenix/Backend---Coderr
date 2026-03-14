@@ -4,6 +4,7 @@ from django.db import models
 
 
 class User(AbstractUser):
+    """Custom user model with a `type` field for role-based access."""
 
     USER_TYPE_CHOICES = (
         ("business", "Business"),

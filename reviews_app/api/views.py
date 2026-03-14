@@ -1,12 +1,18 @@
+# Third-party
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, viewsets
 
+# Local
 from ..models import Review
 from .permissions import IsReviewerOrReadOnly
 from .serializers import ReviewSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
+    """
+    A viewset for viewing and editing review instances.
+    """
+
     queryset = Review.objects.all().order_by("-created_at")
     serializer_class = ReviewSerializer
     permission_classes = [permissions.IsAuthenticated, IsReviewerOrReadOnly]

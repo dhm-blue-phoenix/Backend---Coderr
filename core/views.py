@@ -9,6 +9,7 @@ from reviews_app.models import Review
 
 
 def custom_exception_handler(exc, context):
+    """Custom exception handler to return a generic 500 error message."""
     response = exception_handler(exc, context)
 
     if response is None:
@@ -21,6 +22,7 @@ def custom_exception_handler(exc, context):
 
 
 class BaseInfoView(APIView):
+    """Provides basic statistics about the platform."""
     permission_classes = [AllowAny]
 
     def get(self, request):

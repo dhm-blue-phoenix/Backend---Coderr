@@ -7,6 +7,10 @@ from profiles_app.models import Profile
 
 
 class ProfileSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the Profile model.
+    """
+
     username = serializers.CharField(source="user.username", read_only=True)
     type = serializers.CharField(source="user.type", read_only=True)
     email = serializers.CharField(source="user.email")

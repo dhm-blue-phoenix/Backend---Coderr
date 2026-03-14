@@ -9,6 +9,10 @@ User = get_user_model()
 
 
 class LoginSerializer(serializers.Serializer):
+    """
+    Serializes user login data and validates credentials.
+    """
+
     username = serializers.CharField()
     password = serializers.CharField()
 
@@ -16,16 +20,24 @@ class LoginSerializer(serializers.Serializer):
         user = authenticate(**data)
         if user and user.is_active:
             return user
-        raise serializers.ValidationError("Falsche Anmeldedaten")
+        raise serializers.ValidationError("Incorrect Credentials")
 
 
 class UserDetailsSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the User model, including all user details.
+    """
+
     class Meta:
         model = User
         fields = ("id", "username", "email", "first_name", "last_name", "type")
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
+    """
+    Serializes registration data, validates password confirmation, and creates a new user.
+    """
+
     repeated_password = serializers.CharField(write_only=True)
 
     class Meta:
@@ -36,7 +48,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
     def validate(self, data):
         if data["password"] != data["repeated_password"]:
             raise serializers.ValidationError(
-                {"password": "Passwörter müssen übereinstimmen."}
+                {"password": "Passwords must match."}
             )
         return data
 

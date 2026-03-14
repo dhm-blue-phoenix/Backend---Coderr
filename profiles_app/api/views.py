@@ -12,6 +12,10 @@ from .serializers import ProfileSerializer
 
 
 class ProfileViewSet(viewsets.ModelViewSet):
+    """
+    A viewset for viewing and editing profile instances.
+    """
+
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]

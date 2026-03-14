@@ -11,6 +11,8 @@ User = get_user_model()
 
 
 class RegistrationView(generics.CreateAPIView):
+    """Handles user registration and creates a new user with a token."""
+
     serializer_class = RegistrationSerializer
     permission_classes = [permissions.AllowAny]
 
@@ -31,6 +33,8 @@ class RegistrationView(generics.CreateAPIView):
 
 
 class LoginView(generics.GenericAPIView):
+    """Handles user login and returns an authentication token."""
+
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, *args, **kwargs):

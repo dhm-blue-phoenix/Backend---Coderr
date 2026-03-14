@@ -10,10 +10,16 @@ from core.paginators import StandardResultsSetPagination
 from ..models import Offer, OfferDetail
 from .filters import OfferFilter
 from .permissions import IsBusinessUser, IsOwnerOrReadOnly
-from .serializers import OfferDetailListSerializer, OfferListSerializer, OfferSerializer
+from .serializers import (
+    OfferDetailListSerializer,
+    OfferListSerializer,
+    OfferSerializer,
+)
 
 
 class OfferViewSet(viewsets.ModelViewSet):
+    """ViewSet for handling CRUD operations for Offers."""
+
     queryset = Offer.objects.get_queryset_with_min_price()
 
     serializer_class = OfferSerializer
@@ -48,6 +54,8 @@ class OfferViewSet(viewsets.ModelViewSet):
 
 
 class OfferDetailViewSet(RetrieveAPIView):
+    """API view for retrieving a single OfferDetail."""
+
     queryset = OfferDetail.objects.all()
     serializer_class = OfferDetailListSerializer
     permission_classes = [IsAuthenticated]

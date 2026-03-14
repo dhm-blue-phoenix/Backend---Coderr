@@ -7,6 +7,8 @@ from offers_app.models import OfferDetail
 
 
 class Order(models.Model):
+    """Represents an order placed by a customer for a specific offer detail."""
+
     STATUS_CHOICES = (
         ("pending", "Pending"),
         ("in_progress", "In Progress"),

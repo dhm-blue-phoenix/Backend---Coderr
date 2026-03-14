@@ -6,6 +6,10 @@ from auth_app.models import User
 
 
 class Profile(models.Model):
+    """
+    A model to store user profiles.
+    """
+
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     file = models.CharField(max_length=255, blank=True, null=True)
     location = models.CharField(max_length=100, blank=True, default="")

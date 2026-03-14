@@ -12,6 +12,9 @@ from .serializers import OrderSerializer
 
 
 class OrderViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for handling CRUD operations for Orders.
+    """
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
     pagination_class = None
@@ -41,7 +44,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         offer_detail_id = request.data.get("offer_detail_id")
         if not offer_detail_id:
             return Response(
-                {"error": "offer_detail_id ist erforderlich."},
+                {"error": "offer_detail_id is required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         try:
@@ -49,12 +52,12 @@ class OrderViewSet(viewsets.ModelViewSet):
             OfferDetail.objects.get(id=offer_detail_id)
         except (ValueError, TypeError):
             return Response(
-                {"error": "Ungültige Angebotsdetail-ID."},
+                {"error": "Invalid offer detail ID."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         except OfferDetail.DoesNotExist:
             return Response(
-                {"error": "Ein Angebot mit dieser ID existiert nicht."},
+                {"error": "An offer with this ID does not exist."},
                 status=status.HTTP_404_NOT_FOUND,
             )
         serializer = self.get_serializer(
@@ -72,14 +75,14 @@ class OrderViewSet(viewsets.ModelViewSet):
         if order.business_user != request.user:
             return Response(
                 {
-                    "error": "Sie haben keine Berechtigung, diese Bestellung zu aktualisieren."
+                    "error": "You do not have permission to update this order."
                 },
-                status=status.HTTP_4_FORBIDDEN,
+                status=status.HTTP_403_FORBIDDEN,
             )
         new_status = request.data.get("status")
         if not new_status:
             return Response(
-                {"error": "Das Status-Feld ist erforderlich."},
+                {"error": "The status field is required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         serializer = self.get_serializer(
@@ -94,6 +97,9 @@ User = get_user_model()
 
 
 class OrderCountView(views.APIView):
+    """
+    API view to get the count of in-progress orders for a business user.
+    """
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, business_user_id):
@@ -101,7 +107,7 @@ class OrderCountView(views.APIView):
             business_user = User.objects.get(id=business_user_id, type="business")
         except User.DoesNotExist:
             return Response(
-                {"error": "Business-Benutzer nicht gefunden."},
+                {"error": "Business user not found."},
                 status=status.HTTP_404_NOT_FOUND,
             )
         count = Order.objects.filter(
@@ -111,14 +117,17 @@ class OrderCountView(views.APIView):
 
 
 class CompletedOrderCountView(views.APIView):
+    """
+    API view to get the count of completed orders for a business user.
+    """
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, business_user_id):
-        try:
+         try:
             business_user = User.objects.get(id=business_user_id, type="business")
         except User.DoesNotExist:
             return Response(
-                {"error": "Business-Benutzer nicht gefunden."},
+                {"error": "Business user not found."},
                 status=status.HTTP_404_NOT_FOUND,
             )
         count = Order.objects.filter(

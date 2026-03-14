@@ -5,6 +5,7 @@ from django.db.models import Min
 
 
 class OfferManager(models.Manager):
+    """Custom manager for the Offer model."""
     def get_queryset_with_min_price(self):
         return (
             super()
@@ -18,6 +19,7 @@ class OfferManager(models.Manager):
 
 
 class Offer(models.Model):
+    """Represents a service offer created by a user."""
     title = models.CharField(max_length=255)
     description = models.TextField()
     image = models.CharField(max_length=255, null=True, blank=True)
@@ -36,6 +38,7 @@ class Offer(models.Model):
 
 
 class OfferDetail(models.Model):
+    """Represents a specific pricing tier for an Offer."""
     class OfferTypeChoices(models.TextChoices):
         BASIC = "basic", "Basic"
         STANDARD = "standard", "Standard"

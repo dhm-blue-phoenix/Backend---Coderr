@@ -1,7 +1,11 @@
+# Third-party
 from rest_framework.permissions import BasePermission
 
 
 class IsBusinessUser(BasePermission):
+    """
+    Permission to only allow business users to access a view.
+    """
     def has_permission(self, request, view):
         return bool(
             request.user
@@ -11,6 +15,9 @@ class IsBusinessUser(BasePermission):
 
 
 class IsCustomer(BasePermission):
+    """
+    Permission to only allow customer users to access a view.
+    """
     def has_permission(self, request, view):
         return bool(
             request.user
@@ -20,6 +27,9 @@ class IsCustomer(BasePermission):
 
 
 class IsAdmin(BasePermission):
+    """
+    Permission to only allow admin users to access a view.
+    """
     def has_permission(self, request, view):
         return bool(
             request.user

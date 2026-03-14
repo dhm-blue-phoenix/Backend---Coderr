@@ -8,6 +8,7 @@ from ..models import Offer, OfferDetail
 
 
 class OfferDetailSerializer(serializers.ModelSerializer):
+    """Serializer for the OfferDetail model."""
     price = serializers.FloatField()
 
     class Meta:
@@ -24,6 +25,7 @@ class OfferDetailSerializer(serializers.ModelSerializer):
 
 
 class OfferDetailListSerializer(serializers.ModelSerializer):
+    """Serializer for the OfferDetail model for list views, including a hyperlink."""
     url = serializers.HyperlinkedIdentityField(
         view_name="offerdetail-detail", lookup_field="pk"
     )
@@ -44,6 +46,7 @@ class OfferDetailListSerializer(serializers.ModelSerializer):
 
 
 class OfferDetailInputSerializer(serializers.ModelSerializer):
+    """Serializer for creating and updating OfferDetail instances."""
     price = serializers.FloatField()
 
     class Meta:
@@ -59,6 +62,9 @@ class OfferDetailInputSerializer(serializers.ModelSerializer):
 
 
 class OfferSerializer(serializers.ModelSerializer):
+    """
+    Main serializer for the Offer model, handling nested creation and updates of OfferDetails.
+    """
     details = OfferDetailInputSerializer(many=True)
     user = serializers.ReadOnlyField(source="creator.id")
     user_details = UserDetailsSerializer(source="creator", read_only=True)
@@ -103,9 +109,9 @@ class OfferSerializer(serializers.ModelSerializer):
         return ret
 
     def validate_details(self, value):
-        if not self.instance and len(value) != 3:
+         if not self.instance and len(value) != 3:
             raise serializers.ValidationError(
-                "Genau 3 Angebotsdetails (basic, standard, premium) sind erforderlich."
+                "Exactly 3 offer details (basic, standard, premium) are required."
             )
         return value
 
@@ -137,6 +143,9 @@ class OfferSerializer(serializers.ModelSerializer):
 
 
 class OfferListSerializer(serializers.ModelSerializer):
+    """
+    Serializer for listing offers, including annotated fields for min_price and min_delivery_time.
+    """
     min_price = serializers.SerializerMethodField()
     min_delivery_time = serializers.SerializerMethodField()
     user = serializers.ReadOnlyField(source="creator.id")
