@@ -1,7 +1,8 @@
+from unittest.mock import patch
+
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
-from unittest.mock import patch
 
 
 class BaseInfoTests(APITestCase):
@@ -43,6 +44,10 @@ class BaseInfoTests(APITestCase):
 
     def test_base_info_server_error_500(self):
         self.client.raise_request_exception = False
-        with patch('core.views.Review.objects.count', side_effect=Exception('Database Error')):
+        with patch(
+            "core.views.Review.objects.count", side_effect=Exception("Database Error")
+        ):
             response = self.client.get(self.url)
-            self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            self.assertEqual(
+                response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

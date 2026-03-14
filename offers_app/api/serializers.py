@@ -1,6 +1,10 @@
+# Third-party
 from rest_framework import serializers
-from ..models import Offer, OfferDetail
+
+# Local
 from auth_app.api.serializers import UserDetailsSerializer
+
+from ..models import Offer, OfferDetail
 
 
 class OfferDetailSerializer(serializers.ModelSerializer):
@@ -18,28 +22,45 @@ class OfferDetailSerializer(serializers.ModelSerializer):
             "offer_type",
         ]
 
+
 class OfferDetailListSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(
-        view_name='offerdetail-detail', 
-        lookup_field='pk'
+        view_name="offerdetail-detail", lookup_field="pk"
     )
     price = serializers.FloatField()
 
     class Meta:
         model = OfferDetail
-        fields = ["id", "title", "revisions", "delivery_time_in_days", "price", "features", "offer_type", "url"]
+        fields = [
+            "id",
+            "title",
+            "revisions",
+            "delivery_time_in_days",
+            "price",
+            "features",
+            "offer_type",
+            "url",
+        ]
 
 
 class OfferDetailInputSerializer(serializers.ModelSerializer):
     price = serializers.FloatField()
+
     class Meta:
         model = OfferDetail
-        fields = ["title", "revisions", "delivery_time_in_days", "price", "features", "offer_type"]
+        fields = [
+            "title",
+            "revisions",
+            "delivery_time_in_days",
+            "price",
+            "features",
+            "offer_type",
+        ]
 
 
 class OfferSerializer(serializers.ModelSerializer):
     details = OfferDetailInputSerializer(many=True)
-    user = serializers.ReadOnlyField(source='creator.id')
+    user = serializers.ReadOnlyField(source="creator.id")
     user_details = UserDetailsSerializer(source="creator", read_only=True)
     min_price = serializers.ReadOnlyField()
     min_delivery_time = serializers.ReadOnlyField()
@@ -64,23 +85,28 @@ class OfferSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         ret = super().to_representation(instance)
         details = []
-        request = self.context.get('request')
-        
+        request = self.context.get("request")
+
         # Use serializer with URL for 'retrieve' action, and without for others.
-        if self.context.get('view') is not None and self.context['view'].action == 'retrieve':
+        if (
+            self.context.get("view") is not None
+            and self.context["view"].action == "retrieve"
+        ):
             DetailSerializer = OfferDetailListSerializer
         else:
             DetailSerializer = OfferDetailSerializer
 
         for detail in instance.details.all():
-            details.append(DetailSerializer(detail, context={'request': request}).data)
-        
-        ret['details'] = details
+            details.append(DetailSerializer(detail, context={"request": request}).data)
+
+        ret["details"] = details
         return ret
 
     def validate_details(self, value):
         if not self.instance and len(value) != 3:
-            raise serializers.ValidationError("Genau 3 Angebotsdetails (basic, standard, premium) sind erforderlich.")
+            raise serializers.ValidationError(
+                "Genau 3 Angebotsdetails (basic, standard, premium) sind erforderlich."
+            )
         return value
 
     def create(self, validated_data):
@@ -113,7 +139,7 @@ class OfferSerializer(serializers.ModelSerializer):
 class OfferListSerializer(serializers.ModelSerializer):
     min_price = serializers.SerializerMethodField()
     min_delivery_time = serializers.SerializerMethodField()
-    user = serializers.ReadOnlyField(source='creator.id')
+    user = serializers.ReadOnlyField(source="creator.id")
     user_details = UserDetailsSerializer(source="creator", read_only=True)
     details = OfferDetailListSerializer(many=True, read_only=True)
 

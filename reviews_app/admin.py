@@ -1,5 +1,7 @@
+# Third-party
 from django.contrib import admin
-from .models import Review
 
+# Local
+from .models import Review
 
 admin.site.register(Review)

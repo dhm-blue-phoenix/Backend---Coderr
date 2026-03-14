@@ -1,12 +1,14 @@
+from unittest.mock import patch
+
+from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
-from django.urls import reverse
+
 from auth_app.models import User
-from unittest.mock import patch
 
 
 class AuthenticationTests(APITestCase):
-    
+
     def setUp(self):
         self.registration_url = reverse("register")
         self.login_url = reverse("login")
@@ -107,7 +109,9 @@ class AuthenticationTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_authenticated_request_success(self):
-        reg_response = self.client.post(self.registration_url, self.business_payload, format="json")
+        reg_response = self.client.post(
+            self.registration_url, self.business_payload, format="json"
+        )
         token = reg_response.data["token"]
         self.client.credentials(HTTP_AUTHORIZATION=f"Token {token}")
         protected_url = "/api/offers/"
@@ -125,11 +129,16 @@ class AuthenticationTests(APITestCase):
 
     def test_registration_server_error_500(self):
         self.client.raise_request_exception = False
-        with patch('auth_app.models.User.objects.create_user', side_effect=Exception('Database Error')):
+        with patch(
+            "auth_app.models.User.objects.create_user",
+            side_effect=Exception("Database Error"),
+        ):
             response = self.client.post(
                 self.registration_url, self.customer_payload, format="json"
             )
-            self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            self.assertEqual(
+                response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def test_login_server_error_500(self):
         self.client.post(self.registration_url, self.customer_payload, format="json")
@@ -138,6 +147,10 @@ class AuthenticationTests(APITestCase):
             "password": self.customer_payload["password"],
         }
         self.client.raise_request_exception = False
-        with patch('auth_app.models.User.objects.get', side_effect=Exception('Database Error')):
+        with patch(
+            "auth_app.models.User.objects.get", side_effect=Exception("Database Error")
+        ):
             response = self.client.post(self.login_url, login_payload, format="json")
-            self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            self.assertEqual(
+                response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

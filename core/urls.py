@@ -1,7 +1,7 @@
 from django.contrib import admin
-from django.urls import path, include
-from .views import BaseInfoView
+from django.urls import include, path
 
+from .views import BaseInfoView
 
 api_urlpatterns = [
     path("", include("auth_app.urls")),

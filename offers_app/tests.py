@@ -1,9 +1,10 @@
-from rest_framework import status
-from rest_framework.test import APITestCase
-from rest_framework.authtoken.models import Token
-from auth_app.models import User
 from unittest.mock import patch
 
+from rest_framework import status
+from rest_framework.authtoken.models import Token
+from rest_framework.test import APITestCase
+
+from auth_app.models import User
 
 OFFER_DETAILS_PAYLOAD = [
     {
@@ -37,25 +38,33 @@ class OffersTests(APITestCase):
     def setUp(self):
         reg_url = "/api/registration/"
 
-        res_b = self.client.post(reg_url, {
-            "username": "offerbiz",
-            "email": "offerbiz@test.de",
-            "password": "pass123",
-            "repeated_password": "pass123",
-            "type": "business",
-        }, format="json")
+        res_b = self.client.post(
+            reg_url,
+            {
+                "username": "offerbiz",
+                "email": "offerbiz@test.de",
+                "password": "pass123",
+                "repeated_password": "pass123",
+                "type": "business",
+            },
+            format="json",
+        )
         self.assertEqual(res_b.status_code, status.HTTP_201_CREATED)
         self.business_token = res_b.data["token"]
         self.business_user_id = res_b.data["user_id"]
         self.business_user = User.objects.get(id=self.business_user_id)
 
-        res_c = self.client.post(reg_url, {
-            "username": "offercust",
-            "email": "offercust@test.de",
-            "password": "pass123",
-            "repeated_password": "pass123",
-            "type": "customer",
-        }, format="json")
+        res_c = self.client.post(
+            reg_url,
+            {
+                "username": "offercust",
+                "email": "offercust@test.de",
+                "password": "pass123",
+                "repeated_password": "pass123",
+                "type": "customer",
+            },
+            format="json",
+        )
         self.assertEqual(res_c.status_code, status.HTTP_201_CREATED)
         self.customer_token = res_c.data["token"]
 
@@ -77,7 +86,6 @@ class OffersTests(APITestCase):
             format="json",
         )
         return response
-        
 
     def test_list_offers_no_auth_200(self):
         self.create_offer(self.business_token)
@@ -100,13 +108,12 @@ class OffersTests(APITestCase):
         self.client.credentials()
         response = self.client.get("/api/offers/?page_size=1")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(len(response.data["results"]), 1)
 
     def test_list_offers_filter_by_creator_id(self):
         self.create_offer(self.business_token)
         self.client.credentials()
-        response = self.client.get(
-            f"/api/offers/?creator_id={self.business_user_id}")
+        response = self.client.get(f"/api/offers/?creator_id={self.business_user_id}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         results = response.data.get("results", [])
         self.assertGreater(len(results), 0)
@@ -131,33 +138,40 @@ class OffersTests(APITestCase):
     def test_create_offer_customer_403(self):
         response = self.create_offer(self.customer_token)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        
+
     def test_create_offer_invalid_details_count_400(self):
         self.auth(self.business_token)
-        
+
         less_details = OFFER_DETAILS_PAYLOAD[:2]
         payload_less = {
             "title": "Zu wenige Details",
             "description": "Test",
-            "details": less_details
+            "details": less_details,
         }
         response_less = self.client.post("/api/offers/", payload_less, format="json")
-        self.assertEqual(response_less.status_code, status.HTTP_400_BAD_REQUEST, "Sollte bei < 3 Details fehlschlagen.")
+        self.assertEqual(
+            response_less.status_code,
+            status.HTTP_400_BAD_REQUEST,
+            "Sollte bei < 3 Details fehlschlagen.",
+        )
 
         more_details = OFFER_DETAILS_PAYLOAD * 2
         payload_more = {
             "title": "Zu viele Details",
             "description": "Test",
-            "details": more_details
+            "details": more_details,
         }
         response_more = self.client.post("/api/offers/", payload_more, format="json")
-        self.assertEqual(response_more.status_code, status.HTTP_400_BAD_REQUEST, "Sollte bei > 3 Details fehlschlagen.")
-
+        self.assertEqual(
+            response_more.status_code,
+            status.HTTP_400_BAD_REQUEST,
+            "Sollte bei > 3 Details fehlschlagen.",
+        )
 
     def test_get_offer_detail_authenticated_200(self):
         offer_res = self.create_offer(self.business_token)
-        offer_id = offer_res.data['id']
-        
+        offer_id = offer_res.data["id"]
+
         self.auth(self.customer_token)
         response = self.client.get(f"/api/offers/{offer_id}/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -177,8 +191,8 @@ class OffersTests(APITestCase):
 
     def test_get_offer_detail_unauthenticated_401(self):
         offer_res = self.create_offer(self.business_token)
-        offer_id = offer_res.data['id']
-        
+        offer_id = offer_res.data["id"]
+
         self.client.credentials()
         response = self.client.get(f"/api/offers/{offer_id}/")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -190,39 +204,38 @@ class OffersTests(APITestCase):
 
     def test_get_offer_detail_has_detail_urls(self):
         offer_res = self.create_offer(self.business_token)
-        offer_id = offer_res.data['id']
-        
+        offer_id = offer_res.data["id"]
+
         self.auth(self.customer_token)
         response = self.client.get(f"/api/offers/{offer_id}/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
+
         details = response.data.get("details", [])
         self.assertGreater(len(details), 0)
         for detail in details:
             self.assertIn("url", detail)
             self.assertIn("id", detail)
 
-
     def test_delete_offer_owner_204(self):
         offer_res = self.create_offer(self.business_token)
-        offer_id = offer_res.data['id']
-        
+        offer_id = offer_res.data["id"]
+
         self.auth(self.business_token)
         response = self.client.delete(f"/api/offers/{offer_id}/")
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_delete_offer_non_owner_403(self):
         offer_res = self.create_offer(self.business_token)
-        offer_id = offer_res.data['id']
-        
+        offer_id = offer_res.data["id"]
+
         self.auth(self.customer_token)
         response = self.client.delete(f"/api/offers/{offer_id}/")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_delete_offer_unauthenticated_401(self):
         offer_res = self.create_offer(self.business_token)
-        offer_id = offer_res.data['id']
-        
+        offer_id = offer_res.data["id"]
+
         self.client.credentials()
         response = self.client.delete(f"/api/offers/{offer_id}/")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -232,28 +245,27 @@ class OffersTests(APITestCase):
         response = self.client.delete("/api/offers/999999/")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-
     def test_list_offers_filter_by_min_price(self):
         self.create_offer(self.business_token, title="Offer 1")
         self.client.credentials()
-        
+
         response_all = self.client.get("/api/offers/")
         self.assertEqual(response_all.status_code, status.HTTP_200_OK)
-        
+
         min_price = 200
         response_filtered = self.client.get(f"/api/offers/?min_price={min_price}")
         self.assertEqual(response_filtered.status_code, status.HTTP_200_OK)
-        
+
         for offer in response_filtered.data.get("results", []):
             self.assertGreaterEqual(offer.get("min_price", 0), min_price)
 
     def test_list_offers_filter_by_max_delivery_time(self):
         self.create_offer(self.business_token, title="Offer 1")
         self.client.credentials()
-        
+
         response = self.client.get("/api/offers/?max_delivery_time=7")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
+
         for offer in response.data.get("results", []):
             self.assertLessEqual(offer.get("min_delivery_time", 0), 7)
 
@@ -261,7 +273,7 @@ class OffersTests(APITestCase):
         self.create_offer(self.business_token, title="Offer 1")
         self.create_offer(self.business_token, title="Offer 2")
         self.client.credentials()
-        
+
         response = self.client.get("/api/offers/?ordering=updated_at")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertGreater(len(response.data.get("results", [])), 0)
@@ -270,29 +282,33 @@ class OffersTests(APITestCase):
         self.create_offer(self.business_token, title="Offer 1")
         self.create_offer(self.business_token, title="Offer 2")
         self.client.credentials()
-        
+
         response = self.client.get("/api/offers/?ordering=min_price")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
+
         results = response.data.get("results", [])
         if len(results) > 1:
             prices = [offer.get("min_price", 0) for offer in results]
-            self.assertTrue(prices == sorted(prices) or prices == sorted(prices, reverse=True))
+            self.assertTrue(
+                prices == sorted(prices) or prices == sorted(prices, reverse=True)
+            )
 
     def test_list_offers_search_by_title(self):
         self.create_offer(self.business_token, title="Website Design Service")
         self.client.credentials()
-        
+
         response = self.client.get("/api/offers/?search=Website")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
+
         results = response.data.get("results", [])
         self.assertGreater(len(results), 0)
-        
-        found = any("Website" in offer.get("title", "") or "Website" in offer.get("description", "") 
-                   for offer in results)
-        self.assertTrue(found, "Search sollte in title oder description suchen")
 
+        found = any(
+            "Website" in offer.get("title", "")
+            or "Website" in offer.get("description", "")
+            for offer in results
+        )
+        self.assertTrue(found, "Search sollte in title oder description suchen")
 
     def test_patch_own_offer_details_200(self):
         self.auth(self.business_token)
@@ -308,8 +324,8 @@ class OffersTests(APITestCase):
         if response.status_code != 201:
             self.skipTest(f"Angebot kann nicht erstellt werden: {response.data}")
             return
-            
-        offer_id = response.data['id']
+
+        offer_id = response.data["id"]
         self.auth(self.business_token)
         payload = {
             "details": [
@@ -319,14 +335,13 @@ class OffersTests(APITestCase):
                 }
             ]
         }
-        response = self.client.patch(
-            f"/api/offers/{offer_id}/", payload, format="json")
+        response = self.client.patch(f"/api/offers/{offer_id}/", payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_patch_offer_unauthenticated_401(self):
         offer_res = self.create_offer(self.business_token)
-        offer_id = offer_res.data['id']
-        
+        offer_id = offer_res.data["id"]
+
         self.client.credentials()
         payload = {"title": "Updated Title"}
         response = self.client.patch(f"/api/offers/{offer_id}/", payload, format="json")
@@ -334,8 +349,8 @@ class OffersTests(APITestCase):
 
     def test_patch_offer_non_owner_403(self):
         offer_res = self.create_offer(self.business_token)
-        offer_id = offer_res.data['id']
-        
+        offer_id = offer_res.data["id"]
+
         self.auth(self.customer_token)
         payload = {"title": "Hacked Title"}
         response = self.client.patch(f"/api/offers/{offer_id}/", payload, format="json")
@@ -349,8 +364,8 @@ class OffersTests(APITestCase):
 
     def test_patch_invalid_details_400(self):
         offer_res = self.create_offer(self.business_token)
-        offer_id = offer_res.data['id']
-        
+        offer_id = offer_res.data["id"]
+
         self.auth(self.business_token)
         payload = {
             "details": [
@@ -364,10 +379,9 @@ class OffersTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_patch_offer_missing_type_400(self):
-        '''Test that PATCH without offer_type returns 400'''
         offer_res = self.create_offer(self.business_token)
-        offer_id = offer_res.data['id']
-        
+        offer_id = offer_res.data["id"]
+
         self.auth(self.business_token)
         payload = {
             "details": [
@@ -382,22 +396,29 @@ class OffersTests(APITestCase):
 
     def test_patch_offer_server_error_500(self):
         offer_res = self.create_offer(self.business_token)
-        offer_id = offer_res.data['id']
-        
+        offer_id = offer_res.data["id"]
+
         self.auth(self.business_token)
         self.client.raise_request_exception = False
-        with patch('offers_app.api.views.OfferViewSet.get_object', side_effect=Exception('Database Error')):
-            response = self.client.patch(f"/api/offers/{offer_id}/", {"title": "Test"}, format="json")
-            self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        with patch(
+            "offers_app.api.views.OfferViewSet.get_object",
+            side_effect=Exception("Database Error"),
+        ):
+            response = self.client.patch(
+                f"/api/offers/{offer_id}/", {"title": "Test"}, format="json"
+            )
+            self.assertEqual(
+                response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def test_get_offerdetails_authenticated_200(self):
         offer_res = self.create_offer(self.business_token)
-        details = offer_res.data['details']
+        details = offer_res.data["details"]
         if not details:
             self.skipTest("Keine Offer Details vorhanden")
             return
-        
-        detail_id = details[0]['id']
+
+        detail_id = details[0]["id"]
         self.auth(self.customer_token)
         response = self.client.get(f"/api/offerdetails/{detail_id}/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -411,16 +432,18 @@ class OffersTests(APITestCase):
         # Validate correct values from creation
         self.assertEqual(response.data["title"], OFFER_DETAILS_PAYLOAD[0]["title"])
         self.assertEqual(response.data["price"], OFFER_DETAILS_PAYLOAD[0]["price"])
-        self.assertEqual(response.data["offer_type"], OFFER_DETAILS_PAYLOAD[0]["offer_type"])
+        self.assertEqual(
+            response.data["offer_type"], OFFER_DETAILS_PAYLOAD[0]["offer_type"]
+        )
 
     def test_get_offerdetails_unauthenticated_401(self):
         offer_res = self.create_offer(self.business_token)
-        details = offer_res.data['details']
+        details = offer_res.data["details"]
         if not details:
             self.skipTest("Keine Offer Details vorhanden")
             return
-        
-        detail_id = details[0]['id']
+
+        detail_id = details[0]["id"]
         self.client.credentials()
         response = self.client.get(f"/api/offerdetails/{detail_id}/")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -431,36 +454,51 @@ class OffersTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_get_offerdetails_invalid_id_string_400(self):
-        '''Test that invalid offerdetail ID (string) returns 400 or 404, not 500'''
         self.auth(self.customer_token)
         response = self.client.get("/api/offerdetails/invalid_id/")
-        self.assertIn(response.status_code, [status.HTTP_400_BAD_REQUEST, status.HTTP_404_NOT_FOUND])
+        self.assertIn(
+            response.status_code,
+            [status.HTTP_400_BAD_REQUEST, status.HTTP_404_NOT_FOUND],
+        )
 
     def test_get_offerdetails_server_error_500(self):
         offer_res = self.create_offer(self.business_token)
-        details = offer_res.data['details']
+        details = offer_res.data["details"]
         if not details:
             self.skipTest("Keine Offer Details vorhanden")
             return
-        
-        detail_id = details[0]['id']
+
+        detail_id = details[0]["id"]
         self.auth(self.business_token)
         self.client.raise_request_exception = False
-        with patch('offers_app.api.views.OfferDetailViewSet.get_object', side_effect=Exception('Database Error')):
+        with patch(
+            "offers_app.api.views.OfferDetailViewSet.get_object",
+            side_effect=Exception("Database Error"),
+        ):
             response = self.client.get(f"/api/offerdetails/{detail_id}/")
-            self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            self.assertEqual(
+                response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def test_list_offers_server_error_500(self):
         self.client.credentials()
         self.client.raise_request_exception = False
-        with patch('offers_app.api.views.OfferViewSet.get_queryset', side_effect=Exception('Database Error')):
+        with patch(
+            "offers_app.api.views.OfferViewSet.get_queryset",
+            side_effect=Exception("Database Error"),
+        ):
             response = self.client.get("/api/offers/")
-            self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            self.assertEqual(
+                response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def test_create_offer_server_error_500(self):
         self.auth(self.business_token)
         self.client.raise_request_exception = False
-        with patch('offers_app.models.Offer.objects.create', side_effect=Exception('Database Error')):
+        with patch(
+            "offers_app.models.Offer.objects.create",
+            side_effect=Exception("Database Error"),
+        ):
             response = self.client.post(
                 "/api/offers/",
                 {
@@ -468,47 +506,67 @@ class OffersTests(APITestCase):
                     "description": "Test Description",
                     "details": OFFER_DETAILS_PAYLOAD,
                 },
-                format="json"
+                format="json",
             )
-            self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            self.assertEqual(
+                response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def test_get_offer_detail_server_error_500(self):
         offer_res = self.create_offer(self.business_token)
-        offer_id = offer_res.data['id']
-        
+        offer_id = offer_res.data["id"]
+
         self.auth(self.customer_token)
         self.client.raise_request_exception = False
-        with patch('offers_app.api.views.OfferViewSet.get_object', side_effect=Exception('Database Error')):
+        with patch(
+            "offers_app.api.views.OfferViewSet.get_object",
+            side_effect=Exception("Database Error"),
+        ):
             response = self.client.get(f"/api/offers/{offer_id}/")
-            self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            self.assertEqual(
+                response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def test_delete_offer_server_error_500(self):
         offer_res = self.create_offer(self.business_token)
-        offer_id = offer_res.data['id']
-        
+        offer_id = offer_res.data["id"]
+
         self.auth(self.business_token)
         self.client.raise_request_exception = False
-        with patch('offers_app.api.views.OfferViewSet.get_object', side_effect=Exception('Database Error')):
+        with patch(
+            "offers_app.api.views.OfferViewSet.get_object",
+            side_effect=Exception("Database Error"),
+        ):
             response = self.client.delete(f"/api/offers/{offer_id}/")
-            self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            self.assertEqual(
+                response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def test_get_offer_with_invalid_id_string_400(self):
-        '''Test that invalid offer ID (string) returns 400, not 500'''
         self.auth(self.customer_token)
         response = self.client.get("/api/offers/invalid_id/")
         # Should return 400 or 404, not 500
-        self.assertIn(response.status_code, [status.HTTP_400_BAD_REQUEST, status.HTTP_404_NOT_FOUND])
+        self.assertIn(
+            response.status_code,
+            [status.HTTP_400_BAD_REQUEST, status.HTTP_404_NOT_FOUND],
+        )
 
     def test_delete_offer_with_invalid_id_string_400(self):
-        '''Test that DELETE with invalid offer ID (string) returns 400, not 500'''
         self.auth(self.business_token)
         response = self.client.delete("/api/offers/invalid_id/")
         # Should return 400 or 404, not 500
-        self.assertIn(response.status_code, [status.HTTP_400_BAD_REQUEST, status.HTTP_404_NOT_FOUND])
+        self.assertIn(
+            response.status_code,
+            [status.HTTP_400_BAD_REQUEST, status.HTTP_404_NOT_FOUND],
+        )
 
     def test_patch_offer_with_invalid_id_string_400(self):
-        '''Test that PATCH with invalid offer ID (string) returns 400, not 500'''
         self.auth(self.business_token)
-        response = self.client.patch("/api/offers/invalid_id/", {"title": "Updated"}, format="json")
+        response = self.client.patch(
+            "/api/offers/invalid_id/", {"title": "Updated"}, format="json"
+        )
         # Should return 400 or 404, not 500
-        self.assertIn(response.status_code, [status.HTTP_400_BAD_REQUEST, status.HTTP_404_NOT_FOUND])
+        self.assertIn(
+            response.status_code,
+            [status.HTTP_400_BAD_REQUEST, status.HTTP_404_NOT_FOUND],
+        )

@@ -1,10 +1,11 @@
+# Third-party
+from django.contrib.auth import authenticate, get_user_model
 from rest_framework import generics, permissions, status
-from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
-from django.contrib.auth import authenticate
-from .serializers import RegistrationSerializer
-from django.contrib.auth import get_user_model
+from rest_framework.response import Response
 
+# Local
+from .serializers import RegistrationSerializer
 
 User = get_user_model()
 
@@ -23,7 +24,7 @@ class RegistrationView(generics.CreateAPIView):
             "token": token.key,
             "username": user.username,
             "email": user.email,
-            "user_id": user.id
+            "user_id": user.id,
         }
 
         return Response(response_data, status=status.HTTP_201_CREATED)
@@ -38,12 +39,14 @@ class LoginView(generics.GenericAPIView):
         user = authenticate(username=username, password=password)
         if user:
             token, created = Token.objects.get_or_create(user=user)
-            
+
             response_data = {
                 "token": token.key,
                 "username": user.username,
                 "email": user.email,
-                "user_id": user.id
+                "user_id": user.id,
             }
             return Response(response_data, status=status.HTTP_200_OK)
-        return Response({"error": "Invalid Credentials"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"error": "Invalid Credentials"}, status=status.HTTP_400_BAD_REQUEST
+        )

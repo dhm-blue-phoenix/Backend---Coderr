@@ -1,4 +1,5 @@
 from rest_framework import permissions
+
 from ..models import Review
 
 
@@ -10,8 +11,8 @@ class IsReviewerOrReadOnly(permissions.BasePermission):
         if not request.user or not request.user.is_authenticated:
             return False
 
-        if request.method == 'POST':
-            return request.user.type == 'customer'
+        if request.method == "POST":
+            return request.user.type == "customer"
 
         return True
 

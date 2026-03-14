@@ -1,8 +1,10 @@
+from unittest.mock import patch
+
 from rest_framework import status
 from rest_framework.test import APITestCase
+
 from auth_app.models import User
 from profiles_app.models import Profile
-from unittest.mock import patch
 
 
 class ProfileTests(APITestCase):
@@ -56,8 +58,19 @@ class ProfileTests(APITestCase):
         self.auth(self.business_token)
         response = self.client.get(f"/api/profile/{self.business_profile_id}/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        for field in ["first_name", "last_name", "location", "tel", "description", "working_hours"]:
-            self.assertEqual(response.data.get(field), "", f"Feld '{field}' sollte ein leerer String sein, nicht None.")
+        for field in [
+            "first_name",
+            "last_name",
+            "location",
+            "tel",
+            "description",
+            "working_hours",
+        ]:
+            self.assertEqual(
+                response.data.get(field),
+                "",
+                f"Feld '{field}' sollte ein leerer String sein, nicht None.",
+            )
 
     def test_get_profile_unauthenticated_401(self):
         response = self.client.get(f"/api/profile/{self.business_profile_id}/")
@@ -74,9 +87,11 @@ class ProfileTests(APITestCase):
             "first_name": "Max",
             "location": "Berlin",
             "tel": "0123456789",
-            "email": "newemail@business.de"
+            "email": "newemail@business.de",
         }
-        response = self.client.patch(f"/api/profile/{self.business_profile_id}/", payload, format="json")
+        response = self.client.patch(
+            f"/api/profile/{self.business_profile_id}/", payload, format="json"
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["first_name"], "Max")
         self.assertEqual(response.data["location"], "Berlin")
@@ -92,9 +107,11 @@ class ProfileTests(APITestCase):
             "email": "jane.doe@customer.de",
             "location": "Munich",
             "tel": "9876543210",
-            "description": "Customer profile"
+            "description": "Customer profile",
         }
-        response = self.client.patch(f"/api/profile/{self.customer_profile_id}/", payload, format="json")
+        response = self.client.patch(
+            f"/api/profile/{self.customer_profile_id}/", payload, format="json"
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["first_name"], "Jane")
         self.assertEqual(response.data["last_name"], "Doe")
@@ -113,9 +130,11 @@ class ProfileTests(APITestCase):
             "location": "Berlin",
             "tel": "123456789",
             "description": "Professional service",
-            "working_hours": "9-17"
+            "working_hours": "9-17",
         }
-        response = self.client.patch(f"/api/profile/{self.business_profile_id}/", payload, format="json")
+        response = self.client.patch(
+            f"/api/profile/{self.business_profile_id}/", payload, format="json"
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Validate all fields returned
         self.assertEqual(response.data["first_name"], payload["first_name"])
@@ -133,7 +152,9 @@ class ProfileTests(APITestCase):
     def test_patch_other_profile_403(self):
         self.auth(self.customer_token)
         payload = {"first_name": "Hacker"}
-        response = self.client.patch(f"/api/profile/{self.business_profile_id}/", payload, format="json")
+        response = self.client.patch(
+            f"/api/profile/{self.business_profile_id}/", payload, format="json"
+        )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_patch_profile_not_found_404(self):
@@ -150,8 +171,19 @@ class ProfileTests(APITestCase):
         if response.data:
             profile = response.data[0]
             self.assertEqual(profile.get("type"), "business")
-            for field in ["first_name", "last_name", "location", "tel", "description", "working_hours"]:
-                self.assertEqual(profile.get(field), "", f"Feld '{field}' sollte ein leerer String sein, nicht None.")
+            for field in [
+                "first_name",
+                "last_name",
+                "location",
+                "tel",
+                "description",
+                "working_hours",
+            ]:
+                self.assertEqual(
+                    profile.get(field),
+                    "",
+                    f"Feld '{field}' sollte ein leerer String sein, nicht None.",
+                )
 
     def test_get_business_profiles_unauthenticated_401(self):
         response = self.client.get("/api/profiles/business/")
@@ -159,9 +191,14 @@ class ProfileTests(APITestCase):
 
     def test_get_business_profiles_server_error_500(self):
         self.auth(self.customer_token)
-        with patch('profiles_app.api.views.ProfileViewSet.get_queryset', side_effect=Exception('DB Error')):
+        with patch(
+            "profiles_app.api.views.ProfileViewSet.get_queryset",
+            side_effect=Exception("DB Error"),
+        ):
             response = self.client.get("/api/profiles/business/")
-            self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            self.assertEqual(
+                response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def test_get_customer_profiles_fields_are_empty_strings_200(self):
         self.auth(self.business_token)
@@ -172,7 +209,11 @@ class ProfileTests(APITestCase):
             profile = response.data[0]
             self.assertEqual(profile.get("type"), "customer")
             for field in ["first_name", "last_name", "location", "tel"]:
-                self.assertEqual(profile.get(field), "", f"Feld '{field}' sollte ein leerer String sein, nicht None.")
+                self.assertEqual(
+                    profile.get(field),
+                    "",
+                    f"Feld '{field}' sollte ein leerer String sein, nicht None.",
+                )
 
     def test_get_customer_profiles_unauthenticated_401(self):
         response = self.client.get("/api/profiles/customer/")
@@ -180,30 +221,57 @@ class ProfileTests(APITestCase):
 
     def test_get_customer_profiles_server_error_500(self):
         self.auth(self.business_token)
-        with patch('profiles_app.api.views.ProfileViewSet.get_queryset', side_effect=Exception('DB Error')):
+        with patch(
+            "profiles_app.api.views.ProfileViewSet.get_queryset",
+            side_effect=Exception("DB Error"),
+        ):
             response = self.client.get("/api/profiles/customer/")
-            self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            self.assertEqual(
+                response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def test_get_profile_server_error_500(self):
         self.auth(self.business_token)
-        with patch('profiles_app.api.views.ProfileViewSet.get_object', side_effect=Exception('DB Error')):
+        with patch(
+            "profiles_app.api.views.ProfileViewSet.get_object",
+            side_effect=Exception("DB Error"),
+        ):
             response = self.client.get(f"/api/profile/{self.business_profile_id}/")
-            self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            self.assertEqual(
+                response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def test_patch_profile_server_error_500(self):
         self.auth(self.business_token)
-        with patch('profiles_app.api.views.ProfileViewSet.get_object', side_effect=Exception('DB Error')):
-            response = self.client.patch(f"/api/profile/{self.business_profile_id}/", {}, format="json")
-            self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        with patch(
+            "profiles_app.api.views.ProfileViewSet.get_object",
+            side_effect=Exception("DB Error"),
+        ):
+            response = self.client.patch(
+                f"/api/profile/{self.business_profile_id}/", {}, format="json"
+            )
+            self.assertEqual(
+                response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def test_get_business_profiles_server_error_500(self):
         self.auth(self.customer_token)
-        with patch('profiles_app.api.views.ProfileViewSet.get_queryset', side_effect=Exception('DB Error')):
+        with patch(
+            "profiles_app.api.views.ProfileViewSet.get_queryset",
+            side_effect=Exception("DB Error"),
+        ):
             response = self.client.get("/api/profiles/business/")
-            self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            self.assertEqual(
+                response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def test_get_customer_profiles_server_error_500(self):
         self.auth(self.business_token)
-        with patch('profiles_app.api.views.ProfileViewSet.get_queryset', side_effect=Exception('DB Error')):
+        with patch(
+            "profiles_app.api.views.ProfileViewSet.get_queryset",
+            side_effect=Exception("DB Error"),
+        ):
             response = self.client.get("/api/profiles/customer/")
-            self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            self.assertEqual(
+                response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

@@ -1,6 +1,10 @@
+# Third-party
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+
+# Local
 from auth_app.models import User
+
 from .models import Profile
 
 

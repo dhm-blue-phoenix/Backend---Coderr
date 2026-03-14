@@ -1,12 +1,13 @@
-from rest_framework import viewsets, permissions, filters
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, permissions, viewsets
+
 from ..models import Review
-from .serializers import ReviewSerializer
 from .permissions import IsReviewerOrReadOnly
+from .serializers import ReviewSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
-    queryset = Review.objects.all().order_by('-created_at')
+    queryset = Review.objects.all().order_by("-created_at")
     serializer_class = ReviewSerializer
     permission_classes = [permissions.IsAuthenticated, IsReviewerOrReadOnly]
     pagination_class = None

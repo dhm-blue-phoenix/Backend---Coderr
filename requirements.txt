@@ -1,5 +1,5 @@
 # Dev environment
-pip==26.0.1
+pip
 autopep8
 
 # App

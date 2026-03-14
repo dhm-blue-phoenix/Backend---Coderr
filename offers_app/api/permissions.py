@@ -1,9 +1,13 @@
-from rest_framework.permissions import BasePermission, SAFE_METHODS
+from rest_framework.permissions import SAFE_METHODS, BasePermission
 
 
 class IsBusinessUser(BasePermission):
     def has_permission(self, request, view):
-        return bool(request.user and request.user.is_authenticated and getattr(request.user, 'type', None) == 'business')
+        return bool(
+            request.user
+            and request.user.is_authenticated
+            and getattr(request.user, "type", None) == "business"
+        )
 
 
 class IsOwnerOrReadOnly(BasePermission):
