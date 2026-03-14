@@ -2,9 +2,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from django.db.models import Avg
-from reviews.models import Review
-from profiles.models import Profile
-from offers.models import Offer
+from reviews_app.models import Review
+from profiles_app.models import Profile
+from offers_app.models import Offer
 from rest_framework.views import exception_handler
 
 

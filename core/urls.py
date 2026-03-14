@@ -4,11 +4,11 @@ from .views import BaseInfoView
 
 
 api_urlpatterns = [
-    path("", include("authentication.urls")),
-    path("", include("reviews.api.urls")),
-    path("", include("offers.api.urls")),
-    path("", include("orders.api.urls")),
-    path("", include("profiles.api.urls")),
+    path("", include("auth_app.urls")),
+    path("", include("reviews_app.api.urls")),
+    path("", include("offers_app.api.urls")),
+    path("", include("orders_app.api.urls")),
+    path("", include("profiles_app.api.urls")),
     path("base-info/", BaseInfoView.as_view(), name="base-info"),
 ]
 

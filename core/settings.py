@@ -25,14 +25,14 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "rest_framework.authtoken",
-    "authentication",
-    "offers",
-    "reviews",
-    "profiles",
-    "orders",
+    "auth_app",
+    "offers_app",
+    "reviews_app",
+    "profiles_app",
+    "orders_app",
 ]
 
-AUTH_USER_MODEL = "authentication.User"
+AUTH_USER_MODEL = "auth_app.User"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -105,7 +105,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "authentication.backends.TokenAuthentication",
+        "auth_app.backends.TokenAuthentication",
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
