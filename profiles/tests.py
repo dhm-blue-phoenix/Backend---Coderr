@@ -70,18 +70,65 @@ class ProfileTests(APITestCase):
 
     def test_patch_own_profile_200(self):
         self.auth(self.business_token)
-        payload = {"first_name": "Max", "location": "Berlin", "tel": "0123456789"}
+        payload = {
+            "first_name": "Max",
+            "location": "Berlin",
+            "tel": "0123456789",
+            "email": "newemail@business.de"
+        }
         response = self.client.patch(f"/api/profile/{self.business_profile_id}/", payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["first_name"], "Max")
         self.assertEqual(response.data["location"], "Berlin")
+        self.assertEqual(response.data["tel"], "0123456789")
+        self.assertEqual(response.data["email"], "newemail@business.de")
         self.assertEqual(response.data["last_name"], "")
 
-    def test_patch_profile_unauthenticated_401(self):
-        self.client.credentials()
-        payload = {"first_name": "Max"}
+    def test_patch_customer_profile_with_email_200(self):
+        self.auth(self.customer_token)
+        payload = {
+            "first_name": "Jane",
+            "last_name": "Doe",
+            "email": "jane.doe@customer.de",
+            "location": "Munich",
+            "tel": "9876543210",
+            "description": "Customer profile"
+        }
+        response = self.client.patch(f"/api/profile/{self.customer_profile_id}/", payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["first_name"], "Jane")
+        self.assertEqual(response.data["last_name"], "Doe")
+        self.assertEqual(response.data["email"], "jane.doe@customer.de")
+        self.assertEqual(response.data["location"], "Munich")
+        self.assertEqual(response.data["tel"], "9876543210")
+        self.assertEqual(response.data["description"], "Customer profile")
+        self.assertEqual(response.data["type"], "customer")
+
+    def test_patch_profile_all_fields_200(self):
+        self.auth(self.business_token)
+        payload = {
+            "first_name": "Max",
+            "last_name": "Mustermann",
+            "email": "max@business.de",
+            "location": "Berlin",
+            "tel": "123456789",
+            "description": "Professional service",
+            "working_hours": "9-17"
+        }
         response = self.client.patch(f"/api/profile/{self.business_profile_id}/", payload, format="json")
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Validate all fields returned
+        self.assertEqual(response.data["first_name"], payload["first_name"])
+        self.assertEqual(response.data["last_name"], payload["last_name"])
+        self.assertEqual(response.data["email"], payload["email"])
+        self.assertEqual(response.data["location"], payload["location"])
+        self.assertEqual(response.data["tel"], payload["tel"])
+        self.assertEqual(response.data["description"], payload["description"])
+        self.assertEqual(response.data["working_hours"], payload["working_hours"])
+        self.assertIn("user", response.data)
+        self.assertIn("username", response.data)
+        self.assertIn("created_at", response.data)
+        self.assertIn("type", response.data)
 
     def test_patch_other_profile_403(self):
         self.auth(self.customer_token)

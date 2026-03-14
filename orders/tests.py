@@ -148,6 +148,14 @@ class OrdersTests(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    def test_create_order_with_invalid_id_string_400(self):
+        """Test that POST with invalid offer_detail_id (string) returns 400, not 500"""
+        self.auth(self.customer_token)
+        response = self.client.post(
+            "/api/orders/", {"offer_detail_id": "invalid_id"}, format="json"
+        )
+        self.assertIn(response.status_code, [status.HTTP_400_BAD_REQUEST, status.HTTP_404_NOT_FOUND])
+
 
     def test_patch_order_unauthenticated_401(self):
         response = self.client.patch(
@@ -175,6 +183,20 @@ class OrdersTests(APITestCase):
             "/api/orders/999999/", {"status": "completed"}, format="json"
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_patch_order_with_invalid_id_string_400(self):
+        """Test that PATCH with invalid order ID (string) returns 400 or 404, not 500"""
+        self.auth(self.business_token)
+        response = self.client.patch(
+            "/api/orders/invalid_id/", {"status": "completed"}, format="json"
+        )
+        self.assertIn(response.status_code, [status.HTTP_400_BAD_REQUEST, status.HTTP_404_NOT_FOUND])
+
+    def test_delete_order_with_invalid_id_string_400(self):
+        """Test that DELETE with invalid order ID (string) returns 400 or 404, not 500"""
+        self.auth(self.admin_token)
+        response = self.client.delete("/api/orders/invalid_id/")
+        self.assertIn(response.status_code, [status.HTTP_400_BAD_REQUEST, status.HTTP_404_NOT_FOUND])
 
     def test_patch_order_invalid_status_400(self):
         self.auth(self.business_token)
@@ -249,6 +271,12 @@ class OrdersTests(APITestCase):
         response = self.client.get("/api/order-count/999999/")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    def test_order_count_with_invalid_id_string_400(self):
+        """Test that order-count with invalid user ID (string) returns 400 or 404, not 500"""
+        self.auth(self.customer_token)
+        response = self.client.get("/api/order-count/invalid_id/")
+        self.assertIn(response.status_code, [status.HTTP_400_BAD_REQUEST, status.HTTP_404_NOT_FOUND])
+
     def test_completed_order_count_unauthenticated_401(self):
         response = self.client.get(f"/api/completed-order-count/{self.business_user.id}/")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -265,6 +293,12 @@ class OrdersTests(APITestCase):
         self.auth(self.business_token)
         response = self.client.get("/api/completed-order-count/999999/")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_completed_order_count_with_invalid_id_string_400(self):
+        """Test that completed-order-count with invalid user ID (string) returns 400 or 404, not 500"""
+        self.auth(self.business_token)
+        response = self.client.get("/api/completed-order-count/invalid_id/")
+        self.assertIn(response.status_code, [status.HTTP_400_BAD_REQUEST, status.HTTP_404_NOT_FOUND])
 
     def test_list_orders_server_error_500(self):
         self.auth(self.customer_token)

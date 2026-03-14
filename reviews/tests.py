@@ -154,6 +154,12 @@ class ReviewsTests(APITestCase):
         res = self.client.patch("/api/reviews/999999/", {'rating': 5})
         self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
 
+    def test_patch_review_with_invalid_id_string_400(self):
+        """Test that PATCH with invalid review ID (string) returns 400 or 404, not 500"""
+        self.client.force_authenticate(user=self.customer_user)
+        res = self.client.patch("/api/reviews/invalid_id/", {'rating': 5})
+        self.assertIn(res.status_code, [status.HTTP_400_BAD_REQUEST, status.HTTP_404_NOT_FOUND])
+
     def test_delete_review_unauthenticated_401(self):
         self.client.force_authenticate(user=None)
         res = self.client.delete(f"/api/reviews/{self.review_id}/")
@@ -173,6 +179,12 @@ class ReviewsTests(APITestCase):
         self.client.force_authenticate(user=self.customer_user)
         res = self.client.delete("/api/reviews/999999/")
         self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_delete_review_with_invalid_id_string_400(self):
+        """Test that DELETE with invalid review ID (string) returns 400 or 404, not 500"""
+        self.client.force_authenticate(user=self.customer_user)
+        res = self.client.delete("/api/reviews/invalid_id/")
+        self.assertIn(res.status_code, [status.HTTP_400_BAD_REQUEST, status.HTTP_404_NOT_FOUND])
 
     def test_list_reviews_server_error_500(self):
         self.client.force_authenticate(user=self.customer_user)

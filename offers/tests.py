@@ -118,6 +118,15 @@ class OffersTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIn("id", response.data)
         self.assertEqual(len(response.data["details"]), 3)
+        # Validate details array contains proper objects, not URLs
+        for detail in response.data["details"]:
+            self.assertIn("id", detail)
+            self.assertIn("title", detail)
+            self.assertIn("price", detail)
+            self.assertIn("delivery_time_in_days", detail)
+            self.assertIn("revisions", detail)
+            self.assertIn("features", detail)
+            self.assertIn("offer_type", detail)
 
     def test_create_offer_customer_403(self):
         response = self.create_offer(self.customer_token)
@@ -159,6 +168,12 @@ class OffersTests(APITestCase):
         self.assertIn("description", response.data)
         self.assertIn("min_price", response.data)
         self.assertIn("min_delivery_time", response.data)
+        # Validate details structure
+        self.assertIsInstance(response.data["details"], list)
+        self.assertEqual(len(response.data["details"]), 3)
+        for detail in response.data["details"]:
+            self.assertIn("id", detail)
+            self.assertIn("url", detail)
 
     def test_get_offer_detail_unauthenticated_401(self):
         offer_res = self.create_offer(self.business_token)
@@ -332,7 +347,7 @@ class OffersTests(APITestCase):
         response = self.client.patch("/api/offers/999999/", payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_patch_offer_invalid_details_400(self):
+    def test_patch_invalid_details_400(self):
         offer_res = self.create_offer(self.business_token)
         offer_id = offer_res.data['id']
         
@@ -342,6 +357,23 @@ class OffersTests(APITestCase):
                 {
                     "offer_type": "invalid_type",
                     "price": 100,
+                }
+            ]
+        }
+        response = self.client.patch(f"/api/offers/{offer_id}/", payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_patch_offer_missing_type_400(self):
+        """Test that PATCH without offer_type returns 400"""
+        offer_res = self.create_offer(self.business_token)
+        offer_id = offer_res.data['id']
+        
+        self.auth(self.business_token)
+        payload = {
+            "details": [
+                {
+                    "price": 150,
+                    # Missing "offer_type" - should return 400
                 }
             ]
         }
@@ -376,6 +408,10 @@ class OffersTests(APITestCase):
         self.assertIn("revisions", response.data)
         self.assertIn("features", response.data)
         self.assertIn("offer_type", response.data)
+        # Validate correct values from creation
+        self.assertEqual(response.data["title"], OFFER_DETAILS_PAYLOAD[0]["title"])
+        self.assertEqual(response.data["price"], OFFER_DETAILS_PAYLOAD[0]["price"])
+        self.assertEqual(response.data["offer_type"], OFFER_DETAILS_PAYLOAD[0]["offer_type"])
 
     def test_get_offerdetails_unauthenticated_401(self):
         offer_res = self.create_offer(self.business_token)
@@ -393,6 +429,12 @@ class OffersTests(APITestCase):
         self.auth(self.business_token)
         response = self.client.get("/api/offerdetails/999999/")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_offerdetails_invalid_id_string_400(self):
+        """Test that invalid offerdetail ID (string) returns 400 or 404, not 500"""
+        self.auth(self.customer_token)
+        response = self.client.get("/api/offerdetails/invalid_id/")
+        self.assertIn(response.status_code, [status.HTTP_400_BAD_REQUEST, status.HTTP_404_NOT_FOUND])
 
     def test_get_offerdetails_server_error_500(self):
         offer_res = self.create_offer(self.business_token)
@@ -449,3 +491,24 @@ class OffersTests(APITestCase):
         with patch('offers.api.views.OfferViewSet.get_object', side_effect=Exception('Database Error')):
             response = self.client.delete(f"/api/offers/{offer_id}/")
             self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def test_get_offer_with_invalid_id_string_400(self):
+        """Test that invalid offer ID (string) returns 400, not 500"""
+        self.auth(self.customer_token)
+        response = self.client.get("/api/offers/invalid_id/")
+        # Should return 400 or 404, not 500
+        self.assertIn(response.status_code, [status.HTTP_400_BAD_REQUEST, status.HTTP_404_NOT_FOUND])
+
+    def test_delete_offer_with_invalid_id_string_400(self):
+        """Test that DELETE with invalid offer ID (string) returns 400, not 500"""
+        self.auth(self.business_token)
+        response = self.client.delete("/api/offers/invalid_id/")
+        # Should return 400 or 404, not 500
+        self.assertIn(response.status_code, [status.HTTP_400_BAD_REQUEST, status.HTTP_404_NOT_FOUND])
+
+    def test_patch_offer_with_invalid_id_string_400(self):
+        """Test that PATCH with invalid offer ID (string) returns 400, not 500"""
+        self.auth(self.business_token)
+        response = self.client.patch("/api/offers/invalid_id/", {"title": "Updated"}, format="json")
+        # Should return 400 or 404, not 500
+        self.assertIn(response.status_code, [status.HTTP_400_BAD_REQUEST, status.HTTP_404_NOT_FOUND])
