@@ -59,7 +59,7 @@ python --version
 5. Apply migrations and create the database (SQLite is used for local development):
 
    ```bash
-   cd backend
+   python manage.py makemigrations
    python manage.py migrate
    ```
 
@@ -135,7 +135,7 @@ This will run all tests across the project and display a coverage report (95%+ c
 ## Project Structure
 
 ```
-backend/
+./
 ├── core/                 # Main Django project configuration
 │   ├── settings.py
 │   ├── urls.py
