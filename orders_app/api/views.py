@@ -123,7 +123,7 @@ class CompletedOrderCountView(views.APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, business_user_id):
-         try:
+        try:
             business_user = User.objects.get(id=business_user_id, type="business")
         except User.DoesNotExist:
             return Response(

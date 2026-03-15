@@ -109,7 +109,7 @@ class OfferSerializer(serializers.ModelSerializer):
         return ret
 
     def validate_details(self, value):
-         if not self.instance and len(value) != 3:
+        if not self.instance and len(value) != 3:
             raise serializers.ValidationError(
                 "Exactly 3 offer details (basic, standard, premium) are required."
             )
