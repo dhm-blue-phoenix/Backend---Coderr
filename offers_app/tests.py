@@ -545,7 +545,6 @@ class OffersTests(APITestCase):
     def test_get_offer_with_invalid_id_string_400(self):
         self.auth(self.customer_token)
         response = self.client.get("/api/offers/invalid_id/")
-        # Should return 400 or 404, not 500
         self.assertIn(
             response.status_code,
             [status.HTTP_400_BAD_REQUEST, status.HTTP_404_NOT_FOUND],
@@ -554,7 +553,6 @@ class OffersTests(APITestCase):
     def test_delete_offer_with_invalid_id_string_400(self):
         self.auth(self.business_token)
         response = self.client.delete("/api/offers/invalid_id/")
-        # Should return 400 or 404, not 500
         self.assertIn(
             response.status_code,
             [status.HTTP_400_BAD_REQUEST, status.HTTP_404_NOT_FOUND],
@@ -565,8 +563,29 @@ class OffersTests(APITestCase):
         response = self.client.patch(
             "/api/offers/invalid_id/", {"title": "Updated"}, format="json"
         )
-        # Should return 400 or 404, not 500
         self.assertIn(
             response.status_code,
             [status.HTTP_400_BAD_REQUEST, status.HTTP_404_NOT_FOUND],
         )
+
+    def test_get_offerdetail_response_has_all_required_fields(self):
+        offer_res = self.create_offer(self.business_token)
+        detail_id = offer_res.data["details"][0]["id"]
+
+        self.auth(self.customer_token)
+        response = self.client.get(f"/api/offerdetails/{detail_id}/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        expected_keys = {"id", "title", "revisions", "delivery_time_in_days", "price", "features", "offer_type"}
+        self.assertEqual(set(response.data.keys()), expected_keys)
+
+    def test_patch_offer_unauthorized_returns_401_not_404(self):
+        self.client.credentials()
+        response = self.client.patch("/api/offers/999999/", {"title": "Updated"}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_delete_offer_unauthorized_returns_401_not_404(self):
+        self.client.credentials()
+        response = self.client.delete("/api/offers/999951/")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
