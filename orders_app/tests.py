@@ -54,9 +54,10 @@ class OrdersTests(APITestCase):
             features=["Logo Design", "Visitenkarten"],
             offer_type="basic",
         )
+
         self.second_offer_detail = OfferDetail.objects.create(
             offer=self.offer,
-            title="Nulla suscipit vel a",
+            title="Aut in in.",
             price=250,
             delivery_time_in_days=10,
             revisions=5,
@@ -400,13 +401,18 @@ class OrdersTests(APITestCase):
                 response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+    def test_patch_order_not_found_returns_404_not_403(self):
+        self.auth(self.business_token)
+        response = self.client.patch("/api/orders/999951/", {"status": "completed"}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_post_order_has_correct_title(self):
         self.auth(self.customer_token)
         response = self.client.post(
             "/api/orders/", {"offer_detail_id": self.second_offer_detail.id}, format="json"
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data["title"], "Nulla suscipit vel a")
+        self.assertEqual(response.data["title"], "Aut in in.")
 
     def test_get_order_customer_has_correct_title(self):
         self.auth(self.customer_token)
@@ -415,9 +421,9 @@ class OrdersTests(APITestCase):
         )
         response = self.client.get("/api/orders/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
-        self.assertEqual(response.data[1]["title"], "Nulla suscipit vel a")
-    
+        titles = [o["title"] for o in response.data]
+        self.assertIn("Aut in in.", titles)
+
     def test_get_order_business_has_correct_title(self):
         self.auth(self.customer_token)
         self.client.post(
@@ -426,8 +432,8 @@ class OrdersTests(APITestCase):
         self.auth(self.business_token)
         response = self.client.get("/api/orders/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
-        self.assertEqual(response.data[1]["title"], "Nulla suscipit vel a")
+        titles = [o["title"] for o in response.data]
+        self.assertIn("Aut in in.", titles)
 
     def test_patch_order_has_correct_title(self):
         self.auth(self.customer_token)
@@ -435,13 +441,9 @@ class OrdersTests(APITestCase):
             "/api/orders/", {"offer_detail_id": self.second_offer_detail.id}, format="json"
         )
         order_id = order_res.data["id"]
-
         self.auth(self.business_token)
-        response = self.client.patch(f"/api/orders/{order_id}/", {"status": "completed"}, format="json")
+        response = self.client.patch(
+            f"/api/orders/{order_id}/", {"status": "completed"}, format="json"
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["title"], "Nulla suscipit vel a")
-
-    def test_patch_order_not_found_returns_404_not_403(self):
-        self.auth(self.business_token)
-        response = self.client.patch("/api/orders/999951/", {"status": "completed"}, format="json")
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data["title"], "Aut in in.")

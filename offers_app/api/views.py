@@ -11,7 +11,7 @@ from ..models import Offer, OfferDetail
 from .filters import OfferFilter
 from .permissions import IsBusinessUser, IsOwnerOrReadOnly
 from .serializers import (
-    OfferDetailListSerializer,
+    OfferDetailSerializer,
     OfferListSerializer,
     OfferSerializer,
 )
@@ -21,7 +21,6 @@ class OfferViewSet(viewsets.ModelViewSet):
     """ViewSet for handling CRUD operations for Offers."""
 
     queryset = Offer.objects.get_queryset_with_min_price()
-
     serializer_class = OfferSerializer
     pagination_class = StandardResultsSetPagination
     filter_backends = [
@@ -39,15 +38,18 @@ class OfferViewSet(viewsets.ModelViewSet):
         return OfferSerializer
 
     def get_permissions(self):
-        if self.action == "list":
-            return [AllowAny()]
-        if self.action == "create":
-            return [IsBusinessUser()]
-        if self.action == "retrieve":
-            return [IsAuthenticated()]
-        if self.action in ["update", "partial_update", "destroy"]:
-            return [IsOwnerOrReadOnly()]
-        return super().get_permissions()
+        """
+        Instantiates and returns the list of permissions that this view requires.
+        """
+        if self.action == 'list':
+            self.permission_classes = [AllowAny]
+        elif self.action == 'create':
+            self.permission_classes = [IsAuthenticated, IsBusinessUser]
+        elif self.action in ['update', 'partial_update', 'destroy']:
+            self.permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+        else:
+            self.permission_classes = [IsAuthenticated]
+        return [permission() for permission in self.permission_classes]
 
     def perform_create(self, serializer):
         serializer.save(creator=self.request.user)
@@ -57,5 +59,5 @@ class OfferDetailViewSet(RetrieveAPIView):
     """API view for retrieving a single OfferDetail."""
 
     queryset = OfferDetail.objects.all()
-    serializer_class = OfferDetailListSerializer
+    serializer_class = OfferDetailSerializer
     permission_classes = [IsAuthenticated]

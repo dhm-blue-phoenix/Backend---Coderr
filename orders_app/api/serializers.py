@@ -19,7 +19,7 @@ class OrderSerializer(serializers.ModelSerializer):
     )
     business_user = serializers.PrimaryKeyRelatedField(read_only=True)
 
-    title = serializers.CharField(source="offer_detail.offer.title", read_only=True)
+    title = serializers.CharField(source="offer_detail.title", read_only=True)
     price = serializers.DecimalField(
         source="offer_detail.price", read_only=True, max_digits=10, decimal_places=2
     )

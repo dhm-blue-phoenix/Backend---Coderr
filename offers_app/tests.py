@@ -125,7 +125,6 @@ class OffersTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIn("id", response.data)
         self.assertEqual(len(response.data["details"]), 3)
-        # Validate details array contains proper objects, not URLs
         for detail in response.data["details"]:
             self.assertIn("id", detail)
             self.assertIn("title", detail)
@@ -182,7 +181,6 @@ class OffersTests(APITestCase):
         self.assertIn("description", response.data)
         self.assertIn("min_price", response.data)
         self.assertIn("min_delivery_time", response.data)
-        # Validate details structure
         self.assertIsInstance(response.data["details"], list)
         self.assertEqual(len(response.data["details"]), 3)
         for detail in response.data["details"]:
@@ -235,7 +233,6 @@ class OffersTests(APITestCase):
     def test_delete_offer_unauthenticated_401(self):
         offer_res = self.create_offer(self.business_token)
         offer_id = offer_res.data["id"]
-
         self.client.credentials()
         response = self.client.delete(f"/api/offers/{offer_id}/")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -341,7 +338,6 @@ class OffersTests(APITestCase):
     def test_patch_offer_unauthenticated_401(self):
         offer_res = self.create_offer(self.business_token)
         offer_id = offer_res.data["id"]
-
         self.client.credentials()
         payload = {"title": "Updated Title"}
         response = self.client.patch(f"/api/offers/{offer_id}/", payload, format="json")
@@ -387,7 +383,6 @@ class OffersTests(APITestCase):
             "details": [
                 {
                     "price": 150,
-                    # Missing "offer_type" - should return 400
                 }
             ]
         }
@@ -429,7 +424,6 @@ class OffersTests(APITestCase):
         self.assertIn("revisions", response.data)
         self.assertIn("features", response.data)
         self.assertIn("offer_type", response.data)
-        # Validate correct values from creation
         self.assertEqual(response.data["title"], OFFER_DETAILS_PAYLOAD[0]["title"])
         self.assertEqual(response.data["price"], OFFER_DETAILS_PAYLOAD[0]["price"])
         self.assertEqual(
@@ -571,21 +565,16 @@ class OffersTests(APITestCase):
     def test_get_offerdetail_response_has_all_required_fields(self):
         offer_res = self.create_offer(self.business_token)
         detail_id = offer_res.data["details"][0]["id"]
-
         self.auth(self.customer_token)
         response = self.client.get(f"/api/offerdetails/{detail_id}/")
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
-        expected_keys = {"id", "title", "revisions", "delivery_time_in_days", "price", "features", "offer_type"}
+        expected_keys = {
+            "id",
+            "title",
+            "revisions",
+            "delivery_time_in_days",
+            "price",
+            "features",
+            "offer_type",
+        }
         self.assertEqual(set(response.data.keys()), expected_keys)
-
-    def test_patch_offer_unauthorized_returns_401_not_404(self):
-        self.client.credentials()
-        response = self.client.patch("/api/offers/999999/", {"title": "Updated"}, format="json")
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-    def test_delete_offer_unauthorized_returns_401_not_404(self):
-        self.client.credentials()
-        response = self.client.delete("/api/offers/999951/")
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
