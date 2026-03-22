@@ -8,7 +8,7 @@ from ..models import Offer, OfferDetail
 
 
 class OfferDetailSerializer(serializers.ModelSerializer):
-    """Serializer for the OfferDetail model."""
+    """Serializes `OfferDetail` instances, converting the `price` field to a float."""
     price = serializers.FloatField()
 
     class Meta:
@@ -89,6 +89,7 @@ class OfferSerializer(serializers.ModelSerializer):
         read_only_fields = ["user_details"]
 
     def to_representation(self, instance):
+        """Dynamically selects the detail serializer based on the view's action."""
         ret = super().to_representation(instance)
         details = []
         request = self.context.get("request")
@@ -109,6 +110,7 @@ class OfferSerializer(serializers.ModelSerializer):
         return ret
 
     def validate_details(self, value):
+        """Ensures that exactly three offer details are provided during creation."""
         if not self.instance and len(value) != 3:
             raise serializers.ValidationError(
                 "Exactly 3 offer details (basic, standard, premium) are required."
@@ -116,6 +118,7 @@ class OfferSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
+        """Handles the creation of an `Offer` and its associated `OfferDetail` instances from nested data."""
         details_data = validated_data.pop("details")
         offer = Offer.objects.create(**validated_data)
         for detail_data in details_data:
@@ -123,6 +126,7 @@ class OfferSerializer(serializers.ModelSerializer):
         return offer
 
     def update(self, instance, validated_data):
+        """Handles updates to the `Offer` and its nested `OfferDetail` instances."""
         details_data = validated_data.pop("details", None)
         instance = super().update(instance, validated_data)
 
@@ -169,7 +173,9 @@ class OfferListSerializer(serializers.ModelSerializer):
         ]
 
     def get_min_price(self, obj):
+        """Returns the `min_price` annotated on the queryset."""
         return obj.min_price
 
     def get_min_delivery_time(self, obj):
+        """Returns the `min_delivery_time` annotated on the queryset."""
         return obj.min_delivery_time

@@ -33,6 +33,7 @@ class OfferViewSet(viewsets.ModelViewSet):
     ordering_fields = ["updated_at", "min_price"]
 
     def get_serializer_class(self):
+        """Returns `OfferListSerializer` for list views, and `OfferSerializer` for other actions."""
         if self.action == "list":
             return OfferListSerializer
         return OfferSerializer
@@ -52,6 +53,7 @@ class OfferViewSet(viewsets.ModelViewSet):
         return [permission() for permission in self.permission_classes]
 
     def perform_create(self, serializer):
+        """Sets the creator of the offer to the currently authenticated user."""
         serializer.save(creator=self.request.user)
 
 

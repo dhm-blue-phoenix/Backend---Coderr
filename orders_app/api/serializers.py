@@ -64,6 +64,7 @@ class OrderSerializer(serializers.ModelSerializer):
         ]
 
     def validate_offer_detail_id(self, value):
+        """Validates the existence of the offer detail and stores it in the context."""
         try:
             offer_detail = OfferDetail.objects.get(id=value)
             self.context["offer_detail"] = offer_detail
@@ -76,6 +77,7 @@ class OrderSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
+        """Creates an order, assigning the customer, business user, and offer detail."""
         offer_detail = self.context["offer_detail"]
         customer = self.context["request"].user
         if customer.type == "business":

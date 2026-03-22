@@ -20,6 +20,14 @@ class OrderViewSet(viewsets.ModelViewSet):
     pagination_class = None
 
     def get_permissions(self):
+        """
+        Assigns permissions based on the action.
+
+        - `destroy`: Admin only.
+        - `update`, `partial_update`: Business users only.
+        - `create`: Customer users only.
+        - `list`, `retrieve`: Any authenticated user.
+        """
         if self.action == "destroy":
             self.permission_classes = [IsAdmin]
         elif self.action in ["update", "partial_update"]:
@@ -31,6 +39,13 @@ class OrderViewSet(viewsets.ModelViewSet):
         return super().get_permissions()
 
     def get_queryset(self):
+        """
+        Filters the queryset based on the user's type.
+
+        - Staff/Superusers: See all orders.
+        - Customers: See their own orders.
+        - Business users: See orders associated with their business.
+        """
         user = self.request.user
         if user.is_staff or user.is_superuser:
             return self.queryset
@@ -41,6 +56,11 @@ class OrderViewSet(viewsets.ModelViewSet):
         return self.queryset.none()
 
     def create(self, request, *args, **kwargs):
+        """
+        Handles the creation of a new order.
+
+        Validates the `offer_detail_id` and ensures the user is a customer.
+        """
         offer_detail_id = request.data.get("offer_detail_id")
         if not offer_detail_id:
             return Response(
@@ -71,6 +91,11 @@ class OrderViewSet(viewsets.ModelViewSet):
         )
 
     def update(self, request, *args, **kwargs):
+        """
+        Handles the update of an order's status.
+
+        Only the business user associated with the order can update its status.
+        """
         order = self.get_object()
         if order.business_user != request.user:
             return Response(
@@ -98,7 +123,7 @@ User = get_user_model()
 
 class OrderCountView(views.APIView):
     """
-    API view to get the count of in-progress orders for a business user.
+    Returns the number of in-progress orders for a specific business user.
     """
     permission_classes = [permissions.IsAuthenticated]
 
@@ -118,7 +143,7 @@ class OrderCountView(views.APIView):
 
 class CompletedOrderCountView(views.APIView):
     """
-    API view to get the count of completed orders for a business user.
+    Returns the number of completed orders for a specific business user.
     """
     permission_classes = [permissions.IsAuthenticated]
 
